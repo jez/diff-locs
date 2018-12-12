@@ -1,0 +1,5 @@
+.stack-work/
+diff-locs.cabal
+tags
+.*.sw[nop]
+*~

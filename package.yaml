@@ -1,0 +1,30 @@
+name:                diff-locs
+version:             0.1.0.0
+homepage:            https://github.com/jez/diff-locs
+author:              Jake Zimmerman
+maintainer:          zimmerman.jake@gmail.com
+copyright:           2018 Jake Zimmerman
+license:             MIT
+
+extra-source-files:
+- README.md
+
+# Metadata used when publishing your package
+synopsis:            Short description of your package
+description:         Please see the README on Github at <https://github.com/jez/diff-locs#readme>
+category:            Simple
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Wmissing-signatures
+- -Werror
+- -funbox-strict-fields
+
+dependencies:
+- base >=4.7 && <5
+
+executables:
+  diff-locs:
+    main: Main.hs
+    source-dirs: src
