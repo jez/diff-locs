@@ -20,13 +20,21 @@ ghc-options:
 - -Wmissing-signatures
 - -Werror
 - -funbox-strict-fields
+- -O2
 
 dependencies:
 - base >=4.7 && <5
 - attoparsec
+- docopt
+- mtl
 - text
+
+library:
+  source-dirs: src
 
 executables:
   diff-locs:
     main: Main.hs
-    source-dirs: src
+    source-dirs: app
+    dependencies:
+    - diff-locs
