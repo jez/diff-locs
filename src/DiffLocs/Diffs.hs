@@ -1,25 +1,10 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module DiffLocs.Diffs where
 
 import           Data.Attoparsec.Text
-import qualified Data.Text            as T
 
-newtype Filename = Filename T.Text
-  deriving (Show, Eq)
-
-newtype FromLine = FromLine Int
-  deriving (Show, Eq, Enum)
-newtype ToLine = ToLine Int
-  deriving (Show, Eq, Enum)
-
-data HunkInfo = HunkInfo
-  { hunkFromLine :: FromLine
-  , hunkToLine   :: ToLine
-  }
-  deriving (Show, Eq)
-
+import           DiffLocs.Types
 
 fromFile :: Parser Filename
 fromFile = do
@@ -48,4 +33,3 @@ hunkInfo = do
   _     <- string " @@"
   _     <- takeTill isEndOfLine
   return $ HunkInfo line1 line2
-

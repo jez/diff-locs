@@ -5,9 +5,12 @@
 module DiffLocs.Options where
 
 import           Control.Monad         (when)
+import           Data.Version          (Version, showVersion)
 import           System.Console.Docopt
 import qualified System.Environment    as Env
 import           System.Exit           (exitSuccess)
+
+import           DiffLocs.Types
 
 patterns :: Docopt
 patterns =
@@ -40,23 +43,10 @@ Output format:
 
 |]
 
-data Input
-  = FromStdin
-  | FromFile FilePath
-
-data WhichLines
-  = LinesAdded
-  | LinesAddedAndRemoved
-
-data Options = Options
-  { optionsInput      :: Input
-  , optionsWhichLines :: WhichLines
-  }
-
 hasOption :: Arguments -> String -> Bool
 hasOption args opt = isPresent args (longOption opt)
 
-parseArgv :: String -> IO Options
+parseArgv :: Version -> IO Options
 parseArgv version = do
   args <- parseArgsOrExit patterns =<< Env.getArgs
 
@@ -65,7 +55,7 @@ parseArgv version = do
     exitSuccess
 
   when (args `hasOption` "version") $ do
-    putStrLn version
+    putStrLn $ showVersion version
     exitSuccess
 
   let optionsInput =
