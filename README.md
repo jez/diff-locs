@@ -142,7 +142,6 @@ can link to it from these instructions.
 
 - support `diff -u` output
 - Add cli tests
-- Make sure releases work
 - Bump version to 0.9.0
 
 ## License
