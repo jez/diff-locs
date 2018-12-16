@@ -1,0 +1,83 @@
+# This is the simple Travis configuration, which is intended for use
+# on applications which do not require cross-platform and
+# multiple-GHC-version support. For more information and other
+# options, see:
+#
+# https://docs.haskellstack.org/en/stable/travis_ci/
+#
+# Copy these contents into the root directory of your Github project in a file
+# named .travis.yml
+#
+# UPDATE(jez): I added support for building on macOS
+
+# Do not choose a language; we provide our own build tools.
+language: generic
+
+# Caching so the next build will be fast too.
+cache:
+  directories:
+  - $HOME/.ghc
+  - $HOME/.stack
+  - $TRAVIS_BUILD_DIR/.stack-work
+
+# The different configurations we want to test. We have BUILD=cabal which uses
+# cabal-install, and BUILD=stack which uses Stack. More documentation on each
+# of those below.
+#
+# We set the compiler values here to tell Travis to use a different
+# cache file per set of arguments.
+#
+# If you need to have different apt packages for each combination in the
+# matrix, you can use a line such as:
+#     addons: {apt: {packages: [libfcgi-dev,libgmp-dev]}}
+matrix:
+  include:
+  # The Stack builds. We can pass in arbitrary Stack arguments via the ARGS
+  # variable, such as using --stack-yaml to point to a different file.
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default"
+    addons: {apt: {packages: [libgmp-dev]}}
+
+  # Build on macOS in addition to Linux
+  - env: BUILD=stack ARGS=""
+    compiler: ": #stack default osx"
+    os: osx
+
+before_install:
+# Using compiler above sets CC to an invalid value, so unset it
+- unset CC
+
+# Download and unpack the stack executable
+- export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.local/bin:/opt/alex/$ALEXVER/bin:/opt/happy/$HAPPYVER/bin:$HOME/.cabal/bin:$PATH
+- mkdir -p ~/.local/bin
+- |
+  if [ `uname` = "Darwin" ]
+  then
+    travis_retry curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
+  else
+    travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+  fi
+
+install:
+# Build dependencies
+- stack --no-terminal --install-ghc test --only-dependencies
+
+script:
+# Build the package, its tests, and its docs and run the tests
+- stack --no-terminal test
+
+before_deploy:
+- stack --no-terminal install
+- cp "$TRAVIS_BUILD_DIR/README.md" "$TRAVIS_BUILD_DIR/LICENSE" "$HOME/.local/bin"
+- cd "$HOME/.local/bin"
+- tar czf "diff-locs-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz" diff-locs README.md LICENSE
+
+# Initialized with 'travis setup releases'
+deploy:
+  provider: releases
+  api_key:
+    secure: axOS0HPWpvelcARHpOVu5niDkzkY1NRv+p0SeVkCWnvFXV6BckXbd+avq9yKVfhSWx9oT+RbMwOtbASj8rSFMF6ktKln8vueTzh7UJxTF9T9BKavZlQHb3Z3+GjI84gny0Egf+u5W3aDPUXXdxgkLPE/EXBLoEFBVNIa28xNIs7o1bpATEm8iPgr6HZ8B0GafqBPJ2Sx3tYYPqE3oG8Un5aZDPRNML1qSmRe0fNi2sVN0PamnBJPU5/os04RlgzdmB7wILIKT53nN1EPjpQJPD74rP8NlQYDh138cpd2OOsB9AbF6ey9HBDFGEeGKVJdkSRnM+/QgxnYV17dx9d8A6+sbOk50MWx1Fbhdk2FgbyrSuxQV1vNYYX5nIf4Na0DC//JqGBVDAxgB2V36Mq9wtJNrXgC+SkpynoJSu+69fHtLWUnIfF3yy8hRfUcJsV+6hCWpMyad89EUjSy1t6BdPC6uUbyU1Y+P4/XOT3Idmj65fugz0A1gCm/AcohU7lAeXCOt/GsiYFuzxyJFrZyxhB72S8bYMOFZpkdbu42FXowf2zCKdHk3EEz8L7GyP1g3oV293KHdrl9b/RETGkca6kXEDGRSgaGxu8JFsGTlX4Sy+LrQggHHm5i0KbkTNwnOKKuOMZrhkdNmAfeUNW6hzkZOubYmcUJ/I55cCc9cBQ=
+  file: "$HOME/.local/bin/diff-locs-${TRAVIS_TAG}-${TRAVIS_OS_NAME}.tar.gz"
+  on:
+    tags: true
+    repo: jez/diff-locs
