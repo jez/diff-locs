@@ -138,12 +138,6 @@ If you've packaged this software for your operating system, let me know and I
 can link to it from these instructions.
 
 
-## TODO
-
-- support `diff -u` output
-- Add cli tests
-- Bump version to 0.9.0
-
 ## License
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](https://jez.io/MIT-LICENSE.txt)
