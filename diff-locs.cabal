@@ -2,10 +2,10 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b74284048e5551421f46a18a461f72b695b25eb7ec2ed3f3f3878c04b2f67780
+-- hash: 0eef4abc5d06361cac7fba0c8dcd85630423eb1f5dc6f2f19db2a42eac205e74
 
 name:           diff-locs
-version:        0.1.0.0
+version:        0.9.0.0
 synopsis:       Short description of your package
 description:    Please see the README on Github at <https://github.com/jez/diff-locs#readme>
 category:       Simple
