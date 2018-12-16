@@ -60,8 +60,8 @@ parseArgv version = do
 
   let optionsInput =
         case getArg args (argument "file") of
-          Just filename -> FromFile filename
-          Nothing       -> FromStdin
+          Just filename -> InputFromFile filename
+          Nothing       -> InputFromStdin
 
   let optionsWhichLines =
         case args `hasOption` "all" of

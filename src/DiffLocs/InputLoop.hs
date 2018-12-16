@@ -21,6 +21,12 @@ import           Text.Printf          (HPrintfType, hPrintf)
 import           DiffLocs.Diffs
 import           DiffLocs.Types
 
+-- Our own version of Maybe to be more explicit around why we're passing what's
+-- essentially a Maybe T.Text around.
+data PrevLine
+  = NoPrevLine
+  | PrevLine T.Text
+
 eprintf :: HPrintfType r => String -> r
 eprintf = hPrintf IO.stderr
 
@@ -36,17 +42,21 @@ needsPlusOrMinus :: WhichLines -> Bool
 needsPlusOrMinus LinesAdded           = False
 needsPlusOrMinus LinesAddedAndRemoved = True
 
-printGoodLineRemoved :: WhichLines -> Filename -> FromLine -> IO ()
-printGoodLineRemoved whichLines (Filename filename) (FromLine line) = do
-  let prefix = if needsPlusOrMinus whichLines then "-" else ""
-  TIO.putStr $ prefix <> filename <> ":"
-  print line
+-- Our newtypes ensure that we always match up FromFile and FromLine
+-- when printing.
+printGoodLineRemoved :: WhichLines -> FromFile -> FromLine -> IO ()
+printGoodLineRemoved whichLines (FromFile filename) (FromLine line) = do
+  when (shouldPrintRemoved whichLines) $ do
+    let prefix = if needsPlusOrMinus whichLines then "-" else ""
+    TIO.putStr $ prefix <> filename <> ":"
+    print line
 
-printGoodLineAdded :: WhichLines -> Filename -> ToLine -> IO ()
-printGoodLineAdded whichLines (Filename filename) (ToLine line) = do
-  let prefix = if needsPlusOrMinus whichLines then "+" else ""
-  TIO.putStr $ prefix <> filename <> ":"
-  print line
+printGoodLineAdded :: WhichLines -> ToFile -> ToLine -> IO ()
+printGoodLineAdded whichLines (ToFile filename) (ToLine line) = do
+  when (shouldPrintAdded whichLines) $ do
+    let prefix = if needsPlusOrMinus whichLines then "+" else ""
+    TIO.putStr $ prefix <> filename <> ":"
+    print line
 
 succFromLine :: HunkInfo -> HunkInfo
 succFromLine (HunkInfo { hunkFromLine, hunkToLine }) =
@@ -60,6 +70,8 @@ succBothLines :: HunkInfo -> HunkInfo
 succBothLines (HunkInfo { hunkFromLine, hunkToLine }) =
   HunkInfo (succ hunkFromLine) (succ hunkToLine)
 
+-- Catch the isEOFError exception and turn it into a Nothing.
+-- We need to handle this case specifically and stop looping.
 hTryGetLine :: IO.Handle -> IO (Maybe T.Text)
 hTryGetLine handle = do
   Exn.try (TIO.hGetLine handle) >>= \case
@@ -68,53 +80,45 @@ hTryGetLine handle = do
     Right line -> do
       return $ Just line
 
-noPrevLine :: Maybe T.Text
-noPrevLine = Nothing
-
-hTryGetNextLine :: IO.Handle -> Maybe T.Text -> IO (Maybe T.Text)
+hTryGetNextLine :: IO.Handle -> PrevLine -> IO (Maybe T.Text)
 hTryGetNextLine handle prevLine = case prevLine of
-  Just _  -> return prevLine
-  Nothing -> hTryGetLine handle
+  PrevLine line -> return $ Just line
+  NoPrevLine    -> hTryGetLine handle
 
-processHunk :: Config -> Filename -> Filename -> HunkInfo -> IO (Maybe T.Text)
+processHunk :: Config -> FromFile -> ToFile -> HunkInfo -> IO PrevLine
 processHunk config fileFrom fileTo hunk = do
   let Config fileIn whichLines = config
   hTryGetLine fileIn >>= \case
     Nothing -> do
-      return noPrevLine
+      return NoPrevLine
     Just line -> do
       if
         | " " `isPrefixOf` line -> do
           processHunk config fileFrom fileTo (succBothLines hunk)
         | "-" `isPrefixOf` line -> do
-          when (shouldPrintRemoved whichLines) $ do
-            printGoodLineRemoved whichLines fileFrom (hunkFromLine hunk)
-
+          printGoodLineRemoved whichLines fileFrom (hunkFromLine hunk)
           processHunk config fileFrom fileTo (succFromLine hunk)
         | "+" `isPrefixOf` line -> do
-          when (shouldPrintAdded whichLines) $ do
-            printGoodLineAdded whichLines fileTo (hunkToLine hunk)
-
+          printGoodLineAdded whichLines fileTo (hunkToLine hunk)
           processHunk config fileFrom fileTo (succToLine hunk)
         | otherwise -> do
-          return $ Just line
+          return $ PrevLine line
 
-processHunks
-  :: Config -> Filename -> Filename -> Maybe T.Text -> IO (Maybe T.Text)
+processHunks :: Config -> FromFile -> ToFile -> PrevLine -> IO PrevLine
 processHunks config fileFrom fileTo prevLine = do
   let Config fileIn _whichLines = config
   hTryGetNextLine fileIn prevLine >>= \case
     Nothing -> do
-      return noPrevLine
+      return NoPrevLine
     Just line -> do
       case parseOnly hunkInfo line of
         Left _err -> do
-          return $ Just line
+          return $ PrevLine line
         Right hunk -> do
           nextLine <- processHunk config fileFrom fileTo hunk
           processHunks config fileFrom fileTo nextLine
 
-loop :: Config -> Maybe T.Text -> IO ()
+loop :: Config -> PrevLine -> IO ()
 loop config prevLine = do
   let Config fileIn _whichLines = config
   hTryGetNextLine fileIn prevLine >>= \case
@@ -124,7 +128,7 @@ loop config prevLine = do
       case parseOnly fromFile line of
         Left _err -> do
           -- Skip over lines until we find a from line
-          loop config noPrevLine
+          loop config NoPrevLine
         Right fileFrom -> do
           hTryGetLine fileIn >>= \case
             Nothing -> do
@@ -136,8 +140,8 @@ loop config prevLine = do
                   eprintf "Error parsing toFile: %s\n" err
                   exitFailure
                 Right fileTo -> do
-                  nextLine <- processHunks config fileFrom fileTo noPrevLine
+                  nextLine <- processHunks config fileFrom fileTo NoPrevLine
                   loop config nextLine
 
 run :: Config -> IO ()
-run config = loop config noPrevLine
+run config = loop config NoPrevLine

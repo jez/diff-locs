@@ -6,8 +6,8 @@ import qualified Data.Text as T
 import qualified System.IO as IO
 
 data Input
-  = FromStdin
-  | FromFile FilePath
+  = InputFromStdin
+  | InputFromFile FilePath
 
 data WhichLines
   = LinesAdded
@@ -23,7 +23,9 @@ data Config = Config
   , configWhichLines :: WhichLines
   }
 
-newtype Filename = Filename T.Text
+newtype FromFile = FromFile T.Text
+  deriving (Show, Eq)
+newtype ToFile = ToFile T.Text
   deriving (Show, Eq)
 
 newtype FromLine = FromLine Int

@@ -14,7 +14,7 @@ main = do
 
   fileIn <- case optionsInput of
     -- Leak the file handle because we're short lived anyways
-    FromFile filename -> IO.openFile filename IO.ReadMode
-    FromStdin         -> return IO.stdin
+    InputFromFile filename -> IO.openFile filename IO.ReadMode
+    InputFromStdin         -> return IO.stdin
 
   run $ Config {configFileIn = fileIn, configWhichLines = optionsWhichLines}

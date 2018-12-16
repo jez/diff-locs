@@ -6,19 +6,19 @@ import           Data.Attoparsec.Text
 
 import           DiffLocs.Types
 
-fromFile :: Parser Filename
+fromFile :: Parser FromFile
 fromFile = do
   _        <- string "--- "
   _        <- option "" (string "a/")
   filename <- takeTill isEndOfLine
-  return $ Filename filename
+  return $ FromFile filename
 
-toFile :: Parser Filename
+toFile :: Parser ToFile
 toFile = do
   _        <- string "+++ "
   _        <- option "" (string "b/")
   filename <- takeTill isEndOfLine
-  return $ Filename filename
+  return $ ToFile filename
 
 hunkInfo :: Parser HunkInfo
 hunkInfo = do
