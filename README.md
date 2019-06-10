@@ -8,13 +8,14 @@
 filename + line number pairs involved. This is useful in conjunction with other
 tools that operate on such pairs:
 
-- [`multi-grep`] is a tool that searchs for a pattern in a specific set of lines
-- [`multi-sed`] is a tool that runs sed over a these specific lines
+- [`multi-grep`] is a tool that searches for a pattern in a specific set of
+  lines
+- [`multi-sub`] is a tool that substitutes within a specific set of lines
 - In Vim, pressing `gf` or `gF` will open the file under the cursor at the
   specific line
 
 [`multi-grep`]: https://github.com/jez/multi-grep
-[`multi-sed`]: https://github.com/jez/bin/blob/master/multi-sed
+[`multi-sub`]: https://github.com/jez/multi-sub
 
 For example, given this `git show` diff output:
 
