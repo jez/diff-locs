@@ -2,15 +2,13 @@
 {-# LANGUAGE NamedFieldPuns #-}
 module Main where
 
-import           Control.Monad         (when)
-import qualified System.IO             as IO
-import           System.Posix.IO       (stdInput)
-import           System.Posix.Terminal (queryTerminal)
+import           Control.Monad      (when)
+import qualified System.IO          as IO
 
 import           DiffLocs.InputLoop
 import           DiffLocs.Options
 import           DiffLocs.Types
-import           Paths_diff_locs       (version)
+import           Paths_diff_locs    (version)
 
 main :: IO ()
 main = do
@@ -20,7 +18,7 @@ main = do
     -- Leak the file handle because we're short lived anyways
     InputFromFile filename -> IO.openFile filename IO.ReadMode
     InputFromStdin         -> do
-      isTTY <- queryTerminal stdInput
+      isTTY <- IO.hIsTerminalDevice IO.stdin
       when isTTY $ do
         IO.hPutStrLn IO.stderr "Warning: reading from stdin, which is a tty."
       return IO.stdin

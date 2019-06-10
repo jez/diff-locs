@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.28.2.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0eef4abc5d06361cac7fba0c8dcd85630423eb1f5dc6f2f19db2a42eac205e74
+-- hash: 08e51bfd9bfe027a5593b8f4fed7c0cb181c43f31b86dfa673ae6576837b4f7c
 
 name:           diff-locs
 version:        0.9.0.0
@@ -16,7 +18,6 @@ copyright:      2018 Jake Zimmerman
 license:        MIT
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 extra-source-files:
     README.md
 
@@ -36,7 +37,6 @@ library
     , base >=4.7 && <5
     , docopt
     , text
-    , unix
   default-language: Haskell2010
 
 executable diff-locs
@@ -52,5 +52,4 @@ executable diff-locs
     , diff-locs
     , docopt
     , text
-    , unix
   default-language: Haskell2010

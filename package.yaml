@@ -26,7 +26,6 @@ dependencies:
 - attoparsec
 - docopt
 - text
-- unix
 
 library:
   source-dirs: src
